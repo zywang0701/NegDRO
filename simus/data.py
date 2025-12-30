@@ -5,7 +5,7 @@ class StructuralCausalModelSimu1:
     def __init__(self, p):
         self.p = p
     
-    def sample(self, n, mode=1, seed=None):
+    def sample(self, n, mode=2, seed=None):
         """
         Generates synthetic data for causal inference simulations.
         
@@ -23,16 +23,31 @@ class StructuralCausalModelSimu1:
         x_list, y_list = [], []
         for e in range(n_env):
             X, Y = [], []
-            noise_y = np.random.randn(n)
-            base_mat = np.random.randn(n, self.p)
-            delta_mat = np.zeros((n, self.p))
-            if e == 1:
-                delta_mat[:,0:5] = 3 * np.random.randn(n, 5)
-            if e == 2:
-                delta_mat[:,0:5] = np.array([1, 2, -1, -2, 1])
-            if e == 3:
-                delta_mat[:,:5] = np.random.uniform(low=-1, high=1, size=5)
+            if mode == 1:
+                H = np.random.randn(n)
+                alpha_e = 0.5 + 0.2 * e
+                noise_y = np.random.randn(n) + 0.5 * H
+                base_mat = np.random.randn(n, self.p)
+                delta_mat = np.zeros((n, self.p))
+                if e == 1:
+                    delta_mat[:,:5] = 3 * np.random.randn(n, 5)
+                if e == 2:
+                    delta_mat[:,:5] = np.array([1, 2, -1, -2, 1])
+                if e == 3:
+                    delta_mat[:,:5] = np.random.uniform(low=-1, high=1, size=(n, 5))
+                delta_mat[:, 5:] = 0.5 * e * np.random.randn(n, self.p - 5)
+                delta_mat[:, 0] += alpha_e * H
+            
             if mode == 2:
+                noise_y = np.random.randn(n)
+                base_mat = np.random.randn(n, self.p)
+                delta_mat = np.zeros((n, self.p))
+                if e == 1:
+                    delta_mat[:,:5] = 3 * np.random.randn(n, 5)
+                if e == 2:
+                    delta_mat[:,:5] = np.array([1, 2, -1, -2, 1])
+                if e == 3:
+                    delta_mat[:,:5] = np.random.uniform(low=-1, high=1, size=(n, 5))
                 delta_mat[:, 5:] = 0.5 * e * np.random.randn(n, self.p - 5)
             
             noise_x = base_mat + delta_mat
@@ -42,7 +57,7 @@ class StructuralCausalModelSimu1:
                 X1_val = noise_x[i, 0]
                 X2_val = X1_val + noise_x[i, 1]
                 X3_val = X2_val + noise_x[i, 2]
-                Y_val = X1_val + X3_val + noise_y[i]
+                Y_val = 0.5 * X1_val - 0.5 * X3_val + noise_y[i]
                 X4_val = 0.5 * Y_val + noise_x[i, 3]
                 X5_val = - 0.5 * Y_val + noise_x[i, 4]
                 Xjunk_val = noise_x[i, 5:]
@@ -110,7 +125,7 @@ class StructuralCausalModelEg2:
     
     def sample(self, n, mode=1, seed=None):
         """
-        Generates synthetic data for Example 2.
+        Generates synthetic data for Limited Interventions.
         
         Parameters:
         - n: Number of samples per environment.

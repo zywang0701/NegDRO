@@ -1,7 +1,7 @@
-from methods.dantzig import causalDantzig
-from methods.premethods import *
-from methods.eills import greedy_search, brute_force, pooled_least_squares
-from methods.negDRO_solvew import negDRO_solvew
+from .pre_methods.cdanzig import causalDantzig
+from .pre_methods.others import *
+from .pre_methods.eills import brute_force, pooled_least_squares
+from .negdro import negDRO
 import numpy as np
 import torch
 
@@ -96,6 +96,6 @@ def causal_dantzig(x_list, y_list):
 	g = np.matmul(x_list[0].T, x_list[0]) / n0 - np.matmul(x_list[1].T, x_list[1]) / n1
 	return np.squeeze(np.matmul(np.linalg.inv(g), z))
 
-def negdro(x_list, y_list, gamma, verbose):
-    b_list, w_list = negDRO_solvew(x_list, y_list, gamma=gamma, lambda_reg=0.01, worst_adjust=1, worst_adjust_final=0.1, verbose=verbose)
-    return b_list[-1]
+def negdro(x_list, y_list, gamma):
+    b_neg, _ = negDRO(x_list, y_list, gamma=gamma, early_stop=True, num_iter=1500)
+    return b_neg

@@ -154,7 +154,7 @@ class AnchorRegression(LinearModel):
         self.copy_X = copy_X
 
     def fit(self, X, y, A=None):
-        X, y = self._validate_data(X, y, y_numeric=True)
+        # X, y = self._validate_data(X, y, y_numeric=True)
 
         if type(A) is not np.ndarray:
             A = A.values
@@ -167,6 +167,32 @@ class AnchorRegression(LinearModel):
 
         self.is_fitted_ = True
         return self
+    
+def est_anchor(x_list, y_list, true_para):
+	xs, ys, anchors = [], [], []
+	for i in range(len(x_list)):
+		xs.append(x_list[i])
+		ys.append(y_list[i])
+		onehot = np.zeros(len(x_list)-1)
+		if i + 1 < len(x_list):
+			onehot[i] = 1
+		anchors.append([onehot] * np.shape(x_list[i])[0])
+	
+	X, y, A = np.concatenate(xs, 0), np.squeeze(np.concatenate(ys, 0)), np.concatenate(anchors, 0)
+	error_min = 1e9
+	beta = 0
+
+	for reg in [0, 1, 2, 4, 8, 10, 15, 20, 30, 40, 60, 80, 90, 100, 150, 200, 500, 1000, 5000, 10000]:
+		model = AnchorRegression(lamb=reg)
+		model.fit(X, y, A)
+		cand = np.squeeze(model.coef_)
+		# cov_x = sum([np.matmul(x.T, x) / np.shape(x)[0] for x in x_list]) / len(x_list)
+		error = np.linalg.norm(cand - true_para)
+		if error < error_min:
+			error_min = error
+			beta = cand
+
+	return beta
     
 
 def est_drig(data, gamma, y_idx=-1, del_idx=None, unif_weight=False):
