@@ -24,6 +24,8 @@ class StructuralCausalModelSimu1:
         for e in range(n_env):
             X, Y = [], []
             if mode == 1:
+                # this mode violates the additive intervention assumption (\eta_Y correlated with \delta_1)
+                # and is used for testing the robustness of the proposed method
                 H = np.random.randn(n)
                 alpha_e = 0.5 + 0.2 * e
                 noise_y = np.random.randn(n) + 0.5 * H
